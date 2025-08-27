@@ -32,6 +32,7 @@ import torch.nn as nn
 from functools import partial
 import logging
 from logging.handlers import RotatingFileHandler
+from tldextract import tldextract
 
 '''webdriver utils'''
 def _enable_python_logging(log_path: str = "selenium-debug.log") -> None:
@@ -88,6 +89,38 @@ def is_valid_domain(domain: Union[str, None]) -> bool:
     it_is_a_domain = bool(pattern.fullmatch(domain))
     return it_is_a_domain
 
+
+# -- Robust domain extraction from free-form answers --
+def normalize_domain(text: str) -> Optional[str]:
+    """
+    Extract and normalize a domain from model output.
+    Accepts bare domains possibly wrapped with punctuation or code fences.
+    Returns eTLD+1 style if valid, else None.
+    """
+    if not text:
+        return None
+
+    # Common cleanup: strip code fences/quotes and trailing punctuation
+    s = text.strip().strip("`'\" \t\r\n;,:.()[]{}")
+    s = s.replace("http://", "").replace("https://", "").replace("www.", "")
+    s = s.split()[0]  # take the first token if multiple words
+
+    # Prefer explicit domain-like substrings anywhere in the string
+    candidates = re.findall(r'\b(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}\b', text)
+    if s not in candidates:
+        candidates = [s] + candidates
+
+    for cand in candidates:
+        cand = cand.strip().lower().strip("`'\" \t\r\n;,:.()[]{}")
+        # Validate via tldextract + your is_valid_domain helper
+        try:
+            ext = tldextract.extract(cand)
+            dom = '.'.join(p for p in (ext.domain, ext.suffix) if p)
+        except Exception:
+            continue
+        if dom and is_valid_domain(dom):
+            return dom
+    return None
 
 def url2logo(
     driver: WebDriver,
