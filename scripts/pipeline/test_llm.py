@@ -1,10 +1,11 @@
 from openai import OpenAI
 import torch
+from torch import Tensor  # alias for torch.Tensor
 from scripts.utils.utils import *
 from scripts.utils.web_utils import *
 from scripts.utils.draw_utils import draw_annotated_image_box
 import os
-from typing import List, Tuple, Optional, Union, Dict
+from typing import List, Tuple, Optional, Union, Dict, Literal
 import PIL
 import json
 from tldextract import tldextract
@@ -19,7 +20,14 @@ os.environ['CURL_CA_BUNDLE'] = ''
 
 class TestVLM():
 
-    def __init__(self, logo_encoder, logo_extractor, layout_extractor, param_dict: Dict, proxies:Union[float, Dict] = None):
+    def __init__(
+            self,
+            logo_encoder: nn.Module,
+            logo_extractor: nn.Module,
+            layout_extractor: nn.Module,
+            param_dict: Dict,
+            proxies:Union[float, Dict] = None
+    ):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.proxies = proxies
         self.logo_encoder   = logo_encoder
@@ -39,7 +47,6 @@ class TestVLM():
         self.API_KEY, self.SEARCH_ENGINE_ID = [x.strip() for x in open('./datasets/google_api_key.txt').readlines()]
 
         ## Load hyperparameters
-
         self.brand_recog_temperature, self.brand_recog_max_tokens = param_dict['brand_recog']['temperature'], param_dict['brand_recog']['max_tokens']
         self.brand_recog_sleep = param_dict['brand_recog']['sleep_time']
         self.do_brand_validation = param_dict['brand_valid']['activate']
@@ -59,7 +66,10 @@ class TestVLM():
         self.webhosting_domains = [x.strip() for x in open('./datasets/hosting_blacklists.txt').readlines()]
 
 
-    def detect_logo(self, save_shot_path: str) -> Tuple[Optional[List[float]], Optional[Image.Image]]:
+    def detect_logo(
+        self,
+        save_shot_path: str
+    ) -> Tuple[Optional[List[float]], Optional[Image.Image]]:
         '''
             Logo detection
             :param save_shot_path:
@@ -81,7 +91,10 @@ class TestVLM():
         return logo_box, reference_logo
 
 
-    def brand_recognition_llm(self, reference_logo: Optional[Image.Image]) -> Tuple[Optional[str], Optional[Image.Image], float]:
+    def brand_recognition_llm(
+        self,
+        reference_logo: Optional[Image.Image]
+    ) -> Tuple[Optional[str], Optional[Image.Image], float]:
         '''
             Brand Recognition Model
             :param reference_logo:
@@ -132,7 +145,10 @@ class TestVLM():
 
         return company_domain, company_logo, brand_llm_pred_time
 
-    def popularity_validation(self, company_domain: str) -> Tuple[bool, float]:
+    def popularity_validation(
+        self,
+        company_domain: str
+    ) -> Tuple[bool, float]:
         '''
             Brand recognition model : result validation
             :param company_domain:
@@ -200,7 +216,10 @@ class TestVLM():
 
         return validation_success, logo_searching_time, logo_matching_time
 
-    def crp_prediction_llm(self, webpage_screenshot: Image.Image) -> Tuple[bool, float]:
+    def crp_prediction_llm(
+        self,
+        webpage_screenshot: Image.Image
+    ) -> Tuple[bool, float]:
         '''
             Use LLM to classify credential-requiring page v.s. non-credential-requiring page
             :param webpage_screenshot:
@@ -242,8 +261,12 @@ class TestVLM():
         else:
             return False, crp_llm_pred_time
 
-    def ranking_model(self, url: str, driver: WebDriver, ranking_model_refresh_page: bool) -> \
-                                Tuple[Union[List, str], List[torch.Tensor], WebDriver, float]:
+    def ranking_model(
+        self,
+        url: str,
+        driver: WebDriver,
+        ranking_model_refresh_page: bool,
+    ) -> Tuple[Union[Sequence[str], str], Sequence[Tensor], WebDriver, float]:
         transition_pred_time = 0
         if ranking_model_refresh_page:
             try:
@@ -340,19 +363,23 @@ class TestVLM():
 
             return [], [], driver, transition_pred_time
 
-
-    def test(self, url: str,
-             reference_logo: Optional[Image.Image],
-             logo_box: Optional[List[float]],
-             shot_path: str,
-             html_path: str,
-             driver: Union[WebDriver, float]=None,
-             limit: int=0,
-             brand_recog_time: float=0, crp_prediction_time: float=0, clip_prediction_time: float=0,
-             ranking_model_refresh_page: bool=True,
-             skip_brand_recognition: bool=False,
-             company_domain: Optional[str]=None, company_logo: Optional[Image.Image]=None,
-             ):
+    def test(
+            self,
+            url: str,
+            reference_logo: Optional[Image.Image],
+            logo_box: Optional[Sequence[float]],
+            shot_path: str,
+            html_path: str,
+            driver: Optional[WebDriver] = None,
+            limit: int = 0,
+            brand_recog_time: float = 0.0,
+            crp_prediction_time: float = 0.0,
+            clip_prediction_time: float = 0.0,
+            ranking_model_refresh_page: bool = True,
+            skip_brand_recognition: bool = False,
+            company_domain: Optional[str] = None,
+            company_logo: Optional[Image.Image] = None,
+    ) -> Tuple[Literal["phish", "benign"], str, float, float, float, Image.Image]:
         '''
             PhishLLM
             :param url:

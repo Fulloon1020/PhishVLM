@@ -23,8 +23,6 @@ class PhishLLMLogger():
 
     @classmethod
     def set_logfile(cls, logfile):
-        # if os.path.isfile(logfile):
-        #     os.remove(logfile)  # Remove the existing log file
         PhishLLMLogger._logfile = logfile
 
     @classmethod

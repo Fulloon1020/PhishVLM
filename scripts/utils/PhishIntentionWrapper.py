@@ -5,14 +5,15 @@ import torch
 import torch.nn as nn
 from PIL import Image, ImageOps
 from torchvision import transforms
-from typing import Tuple
+from typing import Tuple, Union
+from numpy.typing import ArrayLike, NDArray
 
 class LayoutDetector(nn.Module):
     def __init__(self, predictor):
         super().__init__()
         self.predictor = predictor
 
-    def forward(self, screenshot_path: str) -> Tuple[np.ndarray, np.ndarray]:
+    def forward(self, screenshot_path: str) -> Tuple[NDArray, NDArray]:
         # Run detection with RCNN predictor
         pred_boxes, pred_classes, _ = pred_rcnn(
             im=screenshot_path,
@@ -27,7 +28,7 @@ class LogoDetector(nn.Module):
         super().__init__()
         self.predictor = predictor
 
-    def forward(self, screenshot_path: str) -> np.ndarray:
+    def forward(self, screenshot_path: str) -> NDArray:
         # Run detection with RCNN predictor
         pred_boxes, pred_classes, _ = pred_rcnn(
             im=screenshot_path,
@@ -58,7 +59,7 @@ class LogoEncoder(nn.Module):
             transforms.Normalize(mean=mean, std=std),
         ])
 
-    def preprocess_image(self, img):
+    def preprocess_image(self, img: Union[str, Image.Image]) -> Image.Image:
         img = Image.open(img) if isinstance(img, str) else img
         img = img.convert("RGBA").convert("RGB")
         # Pad to square
@@ -77,7 +78,7 @@ class LogoEncoder(nn.Module):
         img = img.resize((self.img_size, self.img_size))
         return img
 
-    def forward(self, img):
+    def forward(self, img: Image.Image) -> NDArray:
         img = self.preprocess_image(img)
 
         ocr_emb = ocr_main(image_path=img, model=self.ocr_model, height=None, width=None)[0]

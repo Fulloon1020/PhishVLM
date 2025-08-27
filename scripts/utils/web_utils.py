@@ -1,4 +1,6 @@
 from typing import Union, List, Optional, Dict, Set
+from numpy.typing import ArrayLike, NDArray
+from typing import Sequence, Tuple, Union
 from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -31,6 +33,7 @@ from functools import partial
 import logging
 from logging.handlers import RotatingFileHandler
 
+'''webdriver utils'''
 def _enable_python_logging(log_path: str = "selenium-debug.log") -> None:
     # Root logger (console + rotating file)
     root = logging.getLogger()
@@ -47,10 +50,7 @@ def _enable_python_logging(log_path: str = "selenium-debug.log") -> None:
     logging.getLogger("urllib3").setLevel(logging.DEBUG)
 
 def boot_driver(
-    # driver_log_file: str = "chromedriver.log",
     python_log_file: Optional[str] = "selenium-debug.log",
-    # page_load_timeout: int = 30,
-    # script_timeout: int = 30,
 ) -> WebDriver:
     if python_log_file:
         _enable_python_logging(python_log_file)
@@ -89,7 +89,6 @@ def is_valid_domain(domain: Union[str, None]) -> bool:
     return it_is_a_domain
 
 
-'''Retrieve logo from a webpage'''
 def url2logo(
     driver: WebDriver,
     url: str,
@@ -118,7 +117,6 @@ def url2logo(
     return reference_logo
 
 
-'''Search for domain in Google Search'''
 def query2url(
     query: str,
     SEARCH_ENGINE_API: str,
@@ -153,8 +151,6 @@ def query2url(
 
     return returned_urls
 
-
-'''Search for logo in Google Image'''
 
 
 def query2image(
@@ -271,7 +267,9 @@ def screenshot_element(
     elem: WebElement,
     dom: str,
     driver: WebDriver
-) -> Tuple[Optional[str], Optional[Image.Image], Optional[str]]:
+) -> Tuple[Optional[str],
+           Optional[Image.Image],
+           Optional[str]]:
     """
     Returns:
         (candidate_ui, ele_screenshot_img, candidate_ui_text)
@@ -357,8 +355,11 @@ def screenshot_element(
 
 
 def get_all_clickable_elements(
-        driver: WebDriver
-) -> Tuple[Tuple[List[WebElement], List[str]], Tuple[List[WebElement], List[str]], Tuple[List[WebElement], List[str]], Tuple[List[WebElement], List[str]]]:
+    driver: WebDriver
+) -> Tuple[Tuple[List[WebElement], List[str]],
+           Tuple[List[WebElement], List[str]],
+           Tuple[List[WebElement], List[str]],
+           Tuple[List[WebElement], List[str]]]:
     """
     Collect clickable elements using plain Selenium:
       - Buttons (<button>, input[type=button|submit|reset|image], role=button)
@@ -559,7 +560,10 @@ def page_transition(
     dom: str,
     save_html_path: str,
     save_shot_path: str,
-) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+) -> Tuple[Optional[str],
+           Optional[str],
+           Optional[str],
+           Optional[str]]:
     """
     Click an element (XPath = dom) and save updated screenshot + HTML.
 

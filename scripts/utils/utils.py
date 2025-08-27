@@ -1,11 +1,15 @@
 import numpy as np
-from typing import Union, List, Optional, Dict
+from typing import Union, List, Optional, Dict, Any
 from PIL import Image
 import io
 import base64
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
+from typing import Sequence, Tuple, Union
+Number = Union[int, float]
 
-'''LLM prompt'''
-def image2base64(image: Union[str, Image.Image]):
+'''prompt utils'''
+def image2base64(image: Union[str, Image.Image]) -> str:
 	if isinstance(image, str):
 		image = Image.open(image)
 	img_byte_arr = io.BytesIO()
@@ -14,9 +18,12 @@ def image2base64(image: Union[str, Image.Image]):
 	base64_encoded = base64.b64encode(img_bytes).decode('utf-8')  # Convert bytes to base64 string and decode to UTF-8
 	return base64_encoded
 
-def prepare_candidate_uis(candidate_uis_imgs, candidate_uis_text):
-	candidate_uis_json = []
+def prepare_candidate_uis(
+	candidate_uis_imgs: Sequence[Union[str, Image.Image]],
+	candidate_uis_text: Sequence[str]
+) -> Sequence[Dict[str, Any]]:
 
+	candidate_uis_json = []
 	for ind, (img, text) in enumerate(zip(candidate_uis_imgs, candidate_uis_text)):
 		base64_image = image2base64(img)
 		candidate_uis_json.append({"type": "text",
@@ -24,22 +31,25 @@ def prepare_candidate_uis(candidate_uis_imgs, candidate_uis_text):
 								  )
 		candidate_uis_json.append({"type": "image_url",
 								   "image_url":  {
-									   "url": f"data:image/jpeg;base64,{base64_image}"
-								   }
+									   "url": f"data:image/jpeg;base64,{base64_image}"}
 								   }
 								  )
 
 	return candidate_uis_json
 
-def vlm_question_template_transition(candidate_uis_imgs, candidate_uis_text):
+def vlm_question_template_transition(
+	candidate_uis_imgs: Sequence[Union[str, Image.Image]],
+	candidate_uis_text: Sequence[str]
+) -> Dict[str, Any]:
 	candidate_uis_json = prepare_candidate_uis(candidate_uis_imgs, candidate_uis_text)
 
-	return {"role": "user",
-    	 	"content": candidate_uis_json
-			 }
+	return {
+		"role": "user",
+    	"content": candidate_uis_json
+	 }
 
 
-def vlm_question_template_prediction(screenshot_img: Image.Image):
+def vlm_question_template_prediction(screenshot_img: Image.Image) -> Dict[str, Any]:
 	return \
 		{"role": "user",
 		 "content": [
@@ -55,7 +65,7 @@ def vlm_question_template_prediction(screenshot_img: Image.Image):
 		 }
 
 
-def vlm_question_template_brand(logo_img: Image.Image):
+def vlm_question_template_brand(logo_img: Image.Image) -> Dict[str, Any]:
 	return \
 		{"role": "user",
 		 "content": [
@@ -71,8 +81,11 @@ def vlm_question_template_brand(logo_img: Image.Image):
 		 }
 
 
-'''Bbox utilities'''
-def pairwise_intersect_area(bboxes1, bboxes2):
+'''bounding box utils'''
+def pairwise_intersect_area(
+    bboxes1: ArrayLike,
+    bboxes2: ArrayLike,
+) -> NDArray[np.float32]:
 	# Convert bboxes lists to 3D arrays
 	bboxes1 = np.array(bboxes1)[:, np.newaxis, :]
 	bboxes2 = np.array(bboxes2)
@@ -85,7 +98,12 @@ def pairwise_intersect_area(bboxes1, bboxes2):
 	overlap_areas = overlap_x * overlap_y
 	return overlap_areas
 
-def expand_bbox(bbox, image_width, image_height, expand_ratio):
+def expand_bbox(
+	bbox: Sequence[Number],
+    image_width: int,
+    image_height: int,
+    expand_ratio: Union[Number, Tuple[Number, Number]] = 1.2,
+) -> list[Number]:
 	# Extract the coordinates
 	x1, y1, x2, y2 = bbox
 
