@@ -1,0 +1,28 @@
+VLM_model: "gpt-4o-mini-2024-07-18" # use gpt4
+
+brand_recog: # brand recognition model
+  temperature: 0 # deterministic response
+  max_tokens: 10 # limit the maximum number of generated tokens
+  sleep_time: 0.5 #
+  prompt_path: "./prompts/brand_recog_prompt.json" # path to the prompt
+
+brand_valid:
+  activate: True # whether to activate the brand validation?
+  k: 10 # look at the top-10 google image results to check whether the webpage logo is similar to any one of them
+  siamese_thre: 0.7 # whether the webpage logo is similar to any one of them with similarity threshold as 0.7
+
+crp_pred: # CRP prediction model
+  temperature: 0 # deterministic response
+  max_tokens: 200 #  limit the maximum number of generated tokens
+  sleep_time: 0.5
+  prompt_path: "./prompts/crp_pred_prompt.json" # path to the prompt
+
+rank: # CRP transition model
+  temperature: 0 # deterministic response
+  max_tokens: 10 #  limit the maximum number of generated tokens
+  max_uis_process: 30 # only look at the first k UI elements because the login UI is likely to be located on the top of the screenshot
+  depth_limit: 1
+  driver_sleep_time: 3
+  script_timeout: 30
+  page_load_timeout: 30
+  prompt_path: "./prompts/crp_trans_prompt.json" # path to the prompt
