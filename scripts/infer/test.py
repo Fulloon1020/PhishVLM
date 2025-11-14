@@ -8,6 +8,10 @@ import yaml
 import openai
 import logging
 from selenium.common.exceptions import *
+
+# (确保导入 os)
+import os
+
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read().strip()
 logging.getLogger("httpcore").setLevel(logging.WARNING)
@@ -37,7 +41,7 @@ if __name__ == '__main__':
                       logo_extractor=logo_extractor,
                       layout_extractor=layout_extractor)
     openai.api_key = os.getenv("OPENAI_API_KEY")
-    openai.proxy   = os.getenv("http_proxy", "") # set openai proxy
+    openai.proxy = os.getenv("http_proxy", "")  # set openai proxy
 
     driver = boot_driver()
 
@@ -48,11 +52,16 @@ if __name__ == '__main__':
         with open(result_txt, "w+") as f:
             f.write("folder" + "\t")
             f.write("phish_prediction" + "\t")
-            f.write("target_prediction" + "\t")  # write top1 prediction only
+
+            # --- [修改 1/3] ---
+            # 更新表头以匹配您要求的信号名称
+            f.write("F_brand_flag" + "\t")  # 信号 B: 品牌意图不符标志
+            f.write("F_intent_flag" + "\t")  # 信号 C: 凭证窃取意图标志
+            # ---------------------
+
             f.write("brand_recog_time" + "\t")
             f.write("crp_prediction_time" + "\t")
             f.write("crp_transition_time" + "\n")
-
 
     for ct, folder in tqdm(enumerate(os.listdir(args.folder))):
         if folder in [x.split('\t')[0] for x in open(result_txt, encoding='ISO-8859-1').readlines()]:
@@ -75,13 +84,19 @@ if __name__ == '__main__':
 
         logo_box, reference_logo = llm_cls.detect_logo(shot_path)
         try:
-            pred, brand, brand_recog_time, crp_prediction_time, crp_transition_time, plotvis = llm_cls.test(url=url,
-                                                                                                            reference_logo=reference_logo,
-                                                                                                            logo_box=logo_box,
-                                                                                                            shot_path=shot_path,
-                                                                                                            html_path=html_path,
-                                                                                                            driver=driver,
-                                                                                                            )
+
+            # --- [修改 2/3] ---
+            # 解包 llm_cls.test() 返回的 7 个值, 捕获两个新标志
+            pred, F_brand, F_intent, brand_recog_time, crp_prediction_time, crp_transition_time, plotvis = llm_cls.test(
+                url=url,
+                reference_logo=reference_logo,
+                logo_box=logo_box,
+                shot_path=shot_path,
+                html_path=html_path,
+                driver=driver,
+                )
+            # ---------------------
+
             driver.delete_all_cookies()
         except (WebDriverException) as e:
             print(f"Driver crashed or encountered an error: {e}. Restarting driver.")
@@ -90,11 +105,16 @@ if __name__ == '__main__':
 
         try:
             with open(result_txt, "a+", encoding='ISO-8859-1') as f:
-                f.write(f"{folder}\t{pred}\t{brand}\t{brand_recog_time}\t{crp_prediction_time}\t{crp_transition_time}\n")
+
+                # --- [修改 3/3] ---
+                # 将捕获到的两个标志写入结果文件
+                f.write(
+                    f"{folder}\t{pred}\t{F_brand}\t{F_intent}\t{brand_recog_time}\t{crp_prediction_time}\t{crp_transition_time}\n")
+                # ---------------------
+
             if pred == 'phish':
                 plotvis.save(predict_path)
         except UnicodeEncodeError:
             continue
-
 
     driver.quit()
