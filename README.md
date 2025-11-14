@@ -52,7 +52,7 @@ Input: a URL and its screenshot, Output: Phish/Benign, Phishing target
     * *Case 2: If the domain is not from a web hosting domain: it is flagged as phishing if (i) VLM predicts a targeted brand inconsistent with the webpage's domain (ii) VLM chooses 'A' from Step 2 and (iii) the domain is not a popular domain indexed by Google*
     * *Otherwise: reported as benign*
 
-Project structure
+**Project structure**
 ```
 scripts/ 
 ├── infer/
@@ -69,7 +69,7 @@ prompts/
 
 ## Setup
 
-### Step 1: Install Requirements
+**Step 1: Install Requirements**
 
 Tested on Ubuntu, CUDA 11. A new conda environment "phishllm" will be created after this step.
 
@@ -83,13 +83,13 @@ cd scripts/phishintention
 chmod +x setup.sh
 ./setup.sh
 ```
-Step 2: Install Chrome
+**Step 2: Install Chrome**
 
 ```bash
 
 sudo apt install ./google-chrome-stable_current_amd64.deb
 ```
-Step 3: Register Two API Keys
+**Step 3: Register Two API Keys**
 - 🔑 **OpenAI API key**, [See Tutorial here](https://platform.openai.com/docs/quickstart). Paste the API key to ``./datasets/openai_key.txt``.
 
 - 🔑 **Google Programmable Search API Key**, [See Tutorial here](https://meta.discourse.org/t/google-search-for-discourse-ai-programmable-search-engine-and-custom-search-api/307107). 
@@ -99,7 +99,7 @@ Paste your API Key (in the first line) and Search Engine ID (in the second line)
       [SEARCH_ENGINE_ID]
      ```
      
-Prepare the Dataset
+**Prepare the Dataset**
 To test on your own dataset, you need to prepare the dataset in the following structure:
 ```
 testing_dir/
@@ -116,7 +116,7 @@ testing_dir/
 │   ├── info.txt  # save the webpage URL
 │   └── html.txt  # save the webpage HTML source
 ```
-Inference: Run PhishLLM
+## Run PhishLLM
 我使用 -m 标志来运行脚本，这可以确保 Python 正确解析模块路径，避免 ModuleNotFoundError。
 
 ```Bash
@@ -124,7 +124,7 @@ Inference: Run PhishLLM
 conda activate phishllm
 python -m scripts.infer.test --folder [folder to test, e.g., ./datasets/test_sites/dynapd]
 ```
-Understand the Output
+## Understand the Output
 You will see the console is printing logs like the following: (Sample log hidden)
 
 Meanwhile, a txt file named "[today's date]_phishllm.txt" is being created. This file now contains the raw signals needed for downstream analysis (e.g., a central decision engine plugin).
