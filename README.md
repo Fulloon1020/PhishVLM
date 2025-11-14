@@ -90,13 +90,15 @@ Step 2: Install Chrome
 sudo apt install ./google-chrome-stable_current_amd64.deb
 ```
 Step 3: Register Two API Keys
-🔑 OpenAI API key, See Tutorial here. Paste the API key to ./datasets/openai_key.txt.
+- 🔑 **OpenAI API key**, [See Tutorial here](https://platform.openai.com/docs/quickstart). Paste the API key to ``./datasets/openai_key.txt``.
 
-🔑 Google Programmable Search API Key, See Tutorial here. Paste your API Key (in the first line) and Search Engine ID (in the second line) to ./datasets/google_api_key.txt:
-```
-[API_KEY]
-[SEARCH_ENGINE_ID]
-```
+- 🔑 **Google Programmable Search API Key**, [See Tutorial here](https://meta.discourse.org/t/google-search-for-discourse-ai-programmable-search-engine-and-custom-search-api/307107). 
+Paste your API Key (in the first line) and Search Engine ID (in the second line) to ``./datasets/google_api_key.txt``:
+     ```text 
+      [API_KEY]
+      [SEARCH_ENGINE_ID]
+     ```
+     
 Prepare the Dataset
 To test on your own dataset, you need to prepare the dataset in the following structure:
 ```
